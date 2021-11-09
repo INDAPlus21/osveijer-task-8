@@ -32,7 +32,7 @@ multiply:
 	j mulloop
 	
 mulloop:
-	beqz $a1, exit
+	beq $a1, $zero, exit
 	addi $a1, $a1, -1
 	add $t0, $t0, $a0
 	j mulloop
@@ -42,7 +42,7 @@ fakultet:
 	addi $t1, $t1, -1
 	
 fakloop:
-	beqz $t1, return_fakultet
+	beq $a1, $zero, return_fakultet
 	la $a1, ($t1)
 	jal multiply
 	la $a0, ($v0)
