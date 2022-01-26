@@ -1,10 +1,25 @@
+.globl multiply
+.globl factorial
+
+# Push value to application stack.
+.macro	PUSH (%reg)
+	addi	$sp,$sp,-4              # decrement stack pointer (stack builds "downwards" in memory)
+	sw	    %reg,0($sp)         # save value to stack
+.end_macro
+
+# Pop value from application stack.
+.macro	POP (%reg)
+	lw	    %reg,0($sp)  # load value from stack to given registry
+	addi	$sp,$sp,4        # increment stack pointer (stack builds "downwards" in memory)
+.end_macro
+
 .data
 	nl: .asciiz "\n"
 
-.text
+.text 
 
 main:
-	li $a0, 10
+	li $a0, 11
 	li $a1, 10
 	
 	jal multiply
@@ -15,44 +30,52 @@ main:
 	
 	jal new_line
 	
-	li $a0, 4
+	li $a0, 12
 	
-	j fakultet
+	jal factorial
 	
-return_fakultet:
 	la $a0, ($v0)
 	li $v0, 1
 	syscall
 	
 	li $v0 10
 	syscall
-
 multiply:
+	PUSH($ra)
+	PUSH($a0)
+	PUSH($a1)
 	li $t0, 0
-	j mulloop
+	mulloop:
+		beq $a1, $zero, mulexit
+		addi $a1, $a1, -1
+		add $t0, $t0, $a0
+		j mulloop
+	mulexit:
+		la $v0, ($t0) 
+		POP($a1)
+		POP($a0)
+		POP($ra)
+		jr $ra
 	
-mulloop:
-	beq $a1, $zero, exit
-	addi $a1, $a1, -1
-	add $t0, $t0, $a0
-	j mulloop
-	
-fakultet:
-	la $t1, ($a0)
-	addi $t1, $t1, -1
-	
-fakloop:
-	beq $a1, $zero, return_fakultet
-	la $a1, ($t1)
-	jal multiply
-	la $a0, ($v0)
-	addi $t1, $t1, -1
-	j fakloop
-	
+factorial:
+	PUSH($ra)
+	PUSH($a0)
+	PUSH($a1)
+	addi $a1, $a0, -1
+	facloop:
+		beq $a1, $zero, facexit
+		jal multiply
+		la $a0, ($v0)
+		addi $a1, $a1, -1
+		j facloop
+	facexit:
+		la $v0, ($a0)
+		POP($a1)
+		POP($a0)
+		POP($ra)
+		jr $ra
 
-exit:
-	la $v0, ($t0) 
-	jr $ra
+	
 	
 new_line:
 	la $a0, nl
